@@ -87,3 +87,60 @@ test('the computer keyboard plays notes (D = E4)', async ({ page }) => {
   await page.keyboard.press('KeyD');
   await expect(page.getByTestId('step-counter')).toHaveText(/^2 \//);
 });
+
+test('switching songs loads the new score', async ({ page }) => {
+  await page.goto('/?fakeMidi=1');
+  await expect(page.getByTestId('step-counter')).toHaveText(/^1 \//);
+  await page.getByTestId('song-select').selectOption('builtin:gymnopedie-1');
+  await expect(page.getByTestId('step-counter')).toHaveText('1 / 94');
+  // Bar 1 is the left hand's G2.
+  await chord(page, [43]);
+  await expect(page.getByTestId('step-counter')).toHaveText(/^2 \//);
+});
+
+test('my songs: add a MusicXML file, it survives a reload, then remove it', async ({ page }) => {
+  await page.goto('/?fakeMidi=1');
+  await expect(page.getByTestId('step-counter')).toHaveText(/^1 \//);
+  await page.getByTestId('song-file').setInputFiles('src/test/fixtures/tie-grace-repeat.musicxml');
+  const select = page.getByTestId('song-select');
+  await expect(select.locator('option:checked')).toHaveText('Tie, grace and repeat fixture');
+  await expect(page.getByTestId('step-counter')).toHaveText('1 / 8');
+
+  // Stored on the device and remembered as the last song.
+  await page.reload();
+  await expect(select.locator('option:checked')).toHaveText('Tie, grace and repeat fixture');
+  await expect(page.getByTestId('step-counter')).toHaveText('1 / 8');
+
+  await page.getByRole('button', { name: 'Remove' }).click();
+  await page.getByRole('button', { name: 'Tap again to remove' }).click();
+  await expect(select.locator('option', { hasText: 'Tie, grace' })).toHaveCount(0);
+});
+
+test('listen plays the song with the cursor following, and stops', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.goto('/?fakeMidi=1&synth=1');
+  await expect(page.getByTestId('step-counter')).toHaveText(/^1 \//);
+  const cursor = page.locator('[data-testid="score"] img').first();
+  const startX = await cursor.evaluate((el) => el.getBoundingClientRect().left);
+
+  const listen = page.getByTestId('listen');
+  await listen.click();
+  await expect(listen).toHaveText('■ Stop');
+  // Ode to Joy at 90 bpm: after ~1.5 s the cursor is a few notes in.
+  await expect
+    .poll(() => cursor.evaluate((el) => el.getBoundingClientRect().left), { timeout: 5000 })
+    .toBeGreaterThan(startX + 40);
+
+  // Wait mode ignores notes while listening.
+  await chord(page, [64, 48, 52]);
+  await expect(page.getByTestId('step-counter')).toHaveText(/^1 \//);
+
+  await listen.click();
+  await expect(listen).toHaveText('▶ Listen');
+  // Cursor returns to where wait mode is.
+  await expect
+    .poll(() => cursor.evaluate((el) => el.getBoundingClientRect().left))
+    .toBeLessThan(startX + 5);
+  expect(errors).toEqual([]);
+});

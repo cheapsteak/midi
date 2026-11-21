@@ -1,3 +1,4 @@
+import AVFoundation
 import Capacitor
 import Foundation
 import SwiftMIDIIO // re-exports SwiftMIDICore (MIDIEvent)
@@ -15,7 +16,8 @@ public class MidiBridgePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "start", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getDevices", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "send", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "setKeepAwake", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "setKeepAwake", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setAudioPlayback", returnType: CAPPluginReturnPromise)
     ]
 
     private let midiManager = MIDIManager(clientName: "MidiBridge", model: "Midi", manufacturer: "cheapsteak")
@@ -72,6 +74,17 @@ public class MidiBridgePlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async {
             UIApplication.shared.isIdleTimerDisabled = enabled
             call.resolve()
+        }
+    }
+
+    /// "Listen" mode: let the web view's audio play even when the iPad's silent switch is on.
+    @objc func setAudioPlayback(_ call: CAPPluginCall) {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try AVAudioSession.sharedInstance().setActive(true)
+            call.resolve()
+        } catch {
+            call.reject("Audio session: \(error)")
         }
     }
 

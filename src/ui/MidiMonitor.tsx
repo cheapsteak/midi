@@ -6,6 +6,7 @@ export function MidiMonitor({ onClose }: { onClose: () => void }) {
   const devices = useAppState((s) => s.devices);
   const monitor = useAppState((s) => s.monitor);
   const sustain = useAppState((s) => s.wait.sustain);
+  const sound = useAppState((s) => s.sound);
 
   return (
     <aside className="monitor" aria-label="MIDI monitor">
@@ -18,6 +19,10 @@ export function MidiMonitor({ onClose }: { onClose: () => void }) {
       <p className="monitor-status">
         Status: <strong>{status.state}</strong>
         {'reason' in status ? ` — ${status.reason}` : ''} · Pedal: {sustain ? 'down' : 'up'}
+      </p>
+      <p className="monitor-status">
+        Sound: <strong>{sound.state === 'ready' ? sound.instrument : sound.state}</strong>
+        {sound.state === 'fallback' ? ` — ${sound.reason}` : ''}
       </p>
       <h3>Devices</h3>
       <ul className="monitor-devices">

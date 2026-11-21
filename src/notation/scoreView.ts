@@ -7,7 +7,8 @@ export type NoteVisual = 'default' | 'correct' | 'flawed';
  * implements it; a falling-notes view (M5) can implement it from `Score` alone.
  */
 export interface ScoreView {
-  load(musicXml: string): Promise<Score>;
+  /** MusicXML text, or a MusicXML/MXL file as a Blob. `fallbackTitle` is used if the file has none. */
+  load(content: string | Blob, fallbackTitle?: string): Promise<Score>;
   /** Move the cursor to a score step; null hides it. */
   setActiveStep(scoreStepIndex: number | null): void;
   paintNotes(noteIds: readonly string[], visual: NoteVisual): void;

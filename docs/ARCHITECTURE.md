@@ -512,3 +512,41 @@ What the scaffold actually built, where it differs from the plan above:
 - Monitor latency on iPad shows jitter against the fastest message, not true bridge latency. Add a wall-clock `wall` field to the native payload and show `Date.now() − wall`.
 - Repeats: both passes map to the same OSMD notes, so the second pass starts already painted. Reset paint for the repeated range on a backward jump.
 - If the LK-S245 sends accompaniment/rhythm notes on other channels, they count as wrong notes. Check the monitor's channel column; add a channel filter if needed.
+
+## 13. Song library and Listen (added after M0)
+
+**Songs.** `SongLibrary` (`src/songs/library.ts`) merges three sources, each with an id prefix:
+`builtin:` (CC0 arrangements in `public/songs/`, listed in `catalog.ts`), `local:` (files in the
+git-ignored `songs.local/` folder, bundled by `import.meta.glob` into local builds only) and
+`user:` (files added with **Add song**, stored as ArrayBuffers in IndexedDB `midi/songs`).
+Content reaches OSMD as a `Blob`, so compressed `.mxl` works. The last song is remembered in
+`localStorage`. Copyrighted songs never go in the repo or the Pages build.
+
+**Listen.** Research (two agents) found no library that does score-synced playback for our
+model: OSMD's PlaybackManager is sponsor-only, osmd-audio-player is stale and takes over the
+cursor, MIDI-file players lose the step mapping. So:
+
+- `buildTimeline(score, { fromStep, speed })` (`src/playback/timeline.ts`, pure, unit-tested):
+  step times from onsets and the per-step tempo; tie chains sound once; grace notes just before
+  their main note; right hand slightly louder.
+- `Player` schedules notes 180 ms ahead on the AudioContext clock (smplr cancels only notes it
+  has been handed) and moves the cursor on rAF, compensating for `outputLatency`.
+- Sound: smplr 1.2 `Sampler` with `pianoToPreset` (Splendid Grand Piano, public domain by
+  AKAI). Only the MF layer is used, **self-hosted** in `public/piano/` (62 AAC files, ~6.7 MB;
+  file names made URL-safe and mapped via `preset.samples.map`), its `velRange` widened to
+  1–127 so every velocity plays it at a matching loudness. Self-hosting avoids the rate-limited
+  default host (a 429 there makes keys silently drop out) and makes the iPad app work offline.
+  AAC only (`formats: ['m4a']`): WKWebView's user agent hides "Safari", so smplr would try Ogg.
+  A strict `storage` throws on non-200 so a missing sample rejects `ready` instead of playing
+  silence; then (or after a 20 s timeout) the small oscillator synth plays, and the piano is
+  adopted if it finishes later. `?synth=1` forces the synth (tests).
+- iOS: `navigator.audioSession.type = 'playback'` where available, plus the plugin's
+  `setAudioPlayback()` (AVAudioSession `.playback`), so the silent switch doesn't mute Listen.
+- While listening, wait mode ignores input and doesn't move the cursor; Stop returns the cursor
+  to the wait-mode step. A speed change continues from the current position. Listen stops when
+  the page/app goes to the background (timers are throttled there). Starting in the middle of a
+  tie sounds the rest of the tied note.
+- The Add-song file input has no `accept` (iOS greys out .musicxml/.mxl otherwise); the file
+  name is checked after picking.
+- **🔈 Keys** plays the piano for the on-screen/computer keyboard only (a real piano makes its
+  own sound).

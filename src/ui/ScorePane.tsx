@@ -2,8 +2,6 @@ import { useEffect, useRef } from 'react';
 import { OsmdScoreView } from '../notation/osmd/osmdScoreView';
 import { useAppState, useServices } from './context';
 
-const SONG_URL = `${import.meta.env.BASE_URL}songs/ode-to-joy.musicxml`;
-
 export function ScorePane() {
   const { session } = useServices();
   const hostRef = useRef<HTMLDivElement>(null);
@@ -15,7 +13,7 @@ export function ScorePane() {
     if (!host) return;
     const view = new OsmdScoreView(host);
     session.attachView(view);
-    void session.loadSong(SONG_URL);
+    void session.openInitialSong();
 
     // Re-render only when the width really changes (rotation, window resize), debounced.
     let lastWidth = host.clientWidth;

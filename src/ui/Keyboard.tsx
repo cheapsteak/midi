@@ -33,7 +33,10 @@ function layoutKeys(): { keys: KeyLayout[]; whiteWidthPct: number } {
 export function Keyboard() {
   const { midi } = useServices();
   const down = useAppState((s) => s.wait.down);
-  const hints = useAppState((s) => s.currentRequired);
+  const listening = useAppState((s) => s.listening);
+  const listenKeys = useAppState((s) => s.listenKeys);
+  const requiredKeys = useAppState((s) => s.currentRequired);
+  const hints = listening ? listenKeys : requiredKeys;
   const lastWrong = useAppState((s) => s.lastWrong);
   const octaveBase = useAppState((s) => s.octaveBase);
   const { keys, whiteWidthPct } = useMemo(layoutKeys, []);

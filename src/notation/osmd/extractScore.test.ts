@@ -55,8 +55,46 @@ describe('extractScore', () => {
     expect(score.steps[0]?.notes[0]?.hand).toBe('right'); // one staff: all right hand
   });
 
-  it('plays through in wait mode for every hand selection', async () => {
-    const score = await extract('public/songs/ode-to-joy.musicxml');
+  it('reads Gymnopédie No. 1: 3/4, ties not re-struck, chords in the left hand', async () => {
+    const score = await extract('public/songs/gymnopedie-1.musicxml');
+    expect(score.title).toBe('Gymnopédie No. 1');
+    // Bar 1: G2 bass, then the B3/D4/F#4 chord on beat 2, both left hand.
+    expect(score.steps[0]?.notes.map((n) => [n.midi, n.hand])).toEqual([[43, 'left']]);
+    expect(score.steps[1]?.notes.map((n) => n.midi).sort()).toEqual([59, 62, 66]);
+    expect(score.steps[1]?.notes.every((n) => n.hand === 'left')).toBe(true);
+    // The melody's long F#4 (bars 9-12) is struck once; the continuations are ties.
+    const fSharp4 = score.steps
+      .flatMap((s) => s.notes)
+      .filter((n) => n.midi === 66 && n.hand === 'right');
+    expect(fSharp4.filter((n) => !n.tiedFromPrevious)).toHaveLength(1);
+    expect(fSharp4.filter((n) => n.tiedFromPrevious)).toHaveLength(3);
+    // Everything fits the LK-S245's 61 keys (C2–C7).
+    const all = score.steps.flatMap((s) => s.notes.map((n) => n.midi));
+    expect(Math.min(...all)).toBeGreaterThanOrEqual(36);
+    expect(Math.max(...all)).toBeLessThanOrEqual(96);
+  });
+
+  it('reads Winter Lanterns and keeps it within 61 keys', async () => {
+    const score = await extract('public/songs/winter-lanterns.musicxml');
+    expect(score.title).toBe('Winter Lanterns');
+    expect(score.staffCount).toBe(2);
+    const all = score.steps.flatMap((s) => s.notes.map((n) => n.midi));
+    expect(Math.min(...all)).toBeGreaterThanOrEqual(36);
+    expect(Math.max(...all)).toBeLessThanOrEqual(96);
+    expect(
+      score.steps
+        .at(-1)
+        ?.notes.map((n) => n.midi)
+        .sort(),
+    ).toEqual([40, 47, 76, 80, 83]);
+  });
+
+  it.each([
+    'public/songs/ode-to-joy.musicxml',
+    'public/songs/gymnopedie-1.musicxml',
+    'public/songs/winter-lanterns.musicxml',
+  ])('plays %s through in wait mode for every hand selection', async (path) => {
+    const score = await extract(path);
     for (const hands of ['both', 'right', 'left'] as const) {
       const steps = buildExpectedSteps(score, hands);
       let state = reduce(initialState(), { type: 'start' }, steps, DEFAULT_WAIT_MODE_CONFIG).state;

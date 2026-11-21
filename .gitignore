@@ -6,3 +6,6 @@ playwright-report/
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+
+# Private songs for your own builds only (see src/songs/catalog.ts)
+songs.local/
