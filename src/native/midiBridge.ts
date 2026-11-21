@@ -20,6 +20,8 @@ export interface MidiBridgePlugin {
   /** MIDI out for key lights; not implemented natively until M6. */
   send(options: { data: number[]; deviceId?: string }): Promise<void>;
   setKeepAwake(options: { enabled: boolean }): Promise<void>;
+  /** Audio session category .playback, so sound ignores the silent switch. */
+  setAudioPlayback(): Promise<void>;
   addListener(
     event: 'midiMessage',
     cb: (e: NativeMidiMessages) => void,

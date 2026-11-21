@@ -1,5 +1,7 @@
 import type { HandSelection } from '../score/types';
 import { useAppState, useServices } from './context';
+import { ListenControls } from './ListenControls';
+import { SongPicker } from './SongPicker';
 
 const HANDS: { value: HandSelection; label: string }[] = [
   { value: 'both', label: 'Both' },
@@ -9,7 +11,6 @@ const HANDS: { value: HandSelection; label: string }[] = [
 
 export function Toolbar({ onToggleMonitor }: { onToggleMonitor: () => void }) {
   const { session } = useServices();
-  const title = useAppState((s) => s.songTitle);
   const total = useAppState((s) => s.totalSteps);
   const stepIndex = useAppState((s) => s.wait.stepIndex);
   const stats = useAppState((s) => s.wait.stats);
@@ -19,7 +20,7 @@ export function Toolbar({ onToggleMonitor }: { onToggleMonitor: () => void }) {
   return (
     <header className="toolbar">
       <div className="toolbar-title">
-        <h1>{title || 'Midi'}</h1>
+        <SongPicker />
         <span className="step-counter" data-testid="step-counter">
           {total > 0 ? `${Math.min(stepIndex + 1, total)} / ${total}` : '–'}
         </span>
@@ -45,6 +46,7 @@ export function Toolbar({ onToggleMonitor }: { onToggleMonitor: () => void }) {
         <button type="button" onClick={() => session.restart()}>
           Restart
         </button>
+        <ListenControls />
         <MidiStatusPill />
         <button type="button" className="ghost" onClick={onToggleMonitor} aria-label="MIDI monitor">
           Monitor

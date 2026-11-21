@@ -78,7 +78,8 @@ button.ghost {
 
 .toolbar-title {
   display: flex;
-  align-items: baseline;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 1rem;
   min-width: 0;
 }
@@ -159,6 +160,57 @@ button.ghost {
 .pill.error {
   border-color: var(--bad);
   color: #fca5a5;
+}
+
+/* Song picker */
+.song-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.song-picker select {
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid #334155;
+  border-radius: var(--radius);
+  padding: 0.4rem 0.6rem;
+  max-width: 16rem;
+}
+
+.song-credit {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.listen-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.listen-controls select {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid #334155;
+  border-radius: var(--radius);
+  padding: 0.4rem 0.4rem;
+}
+
+button[aria-pressed="true"].ghost {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button.danger {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: white;
 }
 
 /* Score */

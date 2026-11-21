@@ -1,7 +1,9 @@
 import { createRoot } from 'react-dom/client';
+import { AudioEngine } from './audio/audioEngine';
 import { canAutoStartHardware, createMidiInputs } from './midi/createMidiInput';
 import { PracticeSession } from './session/practiceSession';
 import { createAppStore } from './session/store';
+import { SongLibrary } from './songs/library';
 import { App } from './ui/App';
 import { AppContext } from './ui/context';
 import './ui/styles.css';
@@ -9,7 +11,8 @@ import './ui/styles.css';
 const params = new URLSearchParams(window.location.search);
 const midi = createMidiInputs({ fake: params.has('fakeMidi') });
 const store = createAppStore();
-const session = new PracticeSession(store, midi);
+const audio = new AudioEngine({ disabled: params.has('synth') });
+const session = new PracticeSession(store, midi, new SongLibrary(), audio);
 
 void midi.virtual.start();
 void midi.fake?.start();

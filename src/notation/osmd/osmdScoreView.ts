@@ -31,7 +31,7 @@ export class OsmdScoreView implements ScoreView {
 
   constructor(private readonly container: HTMLElement) {}
 
-  async load(musicXml: string): Promise<Score> {
+  async load(content: string | Blob, fallbackTitle?: string): Promise<Score> {
     const generation = ++this.generation;
     const lib = await loadOsmd();
     if (generation !== this.generation) throw new Error('Superseded by a newer load');
@@ -48,7 +48,7 @@ export class OsmdScoreView implements ScoreView {
       drawPartNames: false,
       cursorsOptions: [{ type: 0, color: '#38bdf8', alpha: 0.35, follow: false }],
     });
-    await osmd.load(musicXml);
+    await osmd.load(content, fallbackTitle);
     if (generation !== this.generation) {
       osmd.destroy();
       throw new Error('Superseded by a newer load');
