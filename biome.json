@@ -1,0 +1,52 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": [
+      "**",
+      "!dist",
+      "!ios",
+      "!node_modules",
+      "!test-results",
+      "!playwright-report",
+      "!public/songs"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "linter": {
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/engine/**", "src/score/**", "src/midi/parse.ts", "src/midi/clock.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "react": "Core logic must stay framework-free.",
+                  "react-dom": "Core logic must stay framework-free.",
+                  "zustand": "Core logic must stay framework-free.",
+                  "opensheetmusicdisplay": "Core logic must not depend on OSMD; use src/score types.",
+                  "@capacitor/core": "Core logic must not depend on Capacitor."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

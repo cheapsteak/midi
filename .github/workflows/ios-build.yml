@@ -1,0 +1,31 @@
+name: iOS build
+
+# The only Swift compile check outside a real Mac. Unsigned simulator build.
+on:
+  push:
+    branches: [main]
+    paths: ["native/**", "ios/**", "package.json", "package-lock.json", "capacitor.config.json"]
+  pull_request:
+    paths: ["native/**", "ios/**", "package.json", "package-lock.json", "capacitor.config.json"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync ios
+      - run: xcodebuild -version
+      - run: >
+          xcodebuild
+          -project ios/App/App.xcodeproj
+          -scheme App
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build
